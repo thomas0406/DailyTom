@@ -1,0 +1,75 @@
+:root{
+  --bg-1:#04040b;
+  --bg-2:#00122a;
+  --panel:rgba(255,255,255,0.03);
+  --accent:#00e5ff;
+  --accent2:#ff00d0;
+  --text:#e6f7ff;
+  --muted:#8fa3b3;
+}
+
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,var(--bg-1),var(--bg-2));color:var(--text);height:100vh;background-attachment:fixed}
+.app{display:flex;height:100vh}
+
+/* ensure app sits above background canvas */
+.app{position:relative;z-index:1}
+
+/* full-bleed canvas for animated neon particles */
+#bgCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.sidebar{width:300px;border-right:1px solid rgba(0,229,255,0.06);background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:18px;display:flex;flex-direction:column;backdrop-filter:blur(6px)}
+.sidebar header{display:flex;gap:12px;align-items:center}
+.sidebar h1{font-size:20px;margin:0;flex:1;letter-spacing:0.6px}
+#newEntryBtn{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#001018;border:none;padding:8px 12px;border-radius:10px;cursor:pointer;box-shadow:0 6px 18px rgba(0,229,255,0.06),0 0 18px rgba(255,0,208,0.06);transition:transform .12s ease}
+#newEntryBtn:hover{transform:translateY(-2px);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.12),0 10px 30px rgba(0,229,255,0.14),0 0 36px rgba(255,0,208,0.12)}
+.entries{list-style:none;padding:8px 0;margin:14px 0;overflow:auto;flex:1}
+.entries li{padding:12px;border-radius:10px;margin-bottom:10px;background:linear-gradient(90deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));cursor:pointer;border:1px solid rgba(255,255,255,0.02);transition:box-shadow .15s,transform .12s}
+.entries li:hover{transform:translateY(-4px);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.06),0 10px 30px rgba(0,229,255,0.08),0 0 20px rgba(255,0,208,0.04)}
+.entries li.active{border-image:none !important;border-color:var(--force-border) !important;box-shadow:0 0 0 1px rgba(255,255,255,0.16),0 10px 36px rgba(0,229,255,0.16),0 0 40px rgba(255,0,208,0.12)}
+.editor{flex:1;padding:28px;overflow:auto}
+.editor-inner{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+input[type="text"],input[type="date"],textarea,input{padding:12px;border:1px solid rgba(255,255,255,0.04);border-radius:12px;font-size:15px;background:rgba(0,0,0,0.18);color:var(--text);outline:none;box-shadow:inset 0 1px 0 rgba(255,255,255,0.02)}
+
+/* Wider title input */
+#entryTitle{width:100%;font-size:18px;padding:14px;border-radius:12px;font-weight:600;letter-spacing:0.2px}
+textarea{min-height:300px;resize:vertical}
+.audio-controls .file-row{display:flex;gap:8px;align-items:center}
+#clearAudioFile{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text);cursor:pointer}
+.audio-controls{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.audio-controls .label{margin-bottom:4px;color:var(--muted);font-size:13px}
+.audio-controls #audioUrl{width:100%;min-width:0;padding:10px;border-radius:8px}
+.audio-controls .file-row{gap:10px;align-items:center;width:100%}
+.audio-controls .file-row input[type="file"]{flex:1}
+#audioPlayer{width:100%;max-width:100%;margin-top:6px;border-radius:8px;outline:none}
+/* audio player row with toggle button */
+.audio-player-row{display:flex;gap:10px;align-items:center}
+.audio-player-row #audioPlayer{flex:1;width:auto;margin-top:0}
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:8px;border:1px solid var(--force-border);background:transparent;color:var(--text);cursor:pointer}
+.icon-btn svg{display:block;opacity:0.95}
+.icon-btn:hover{box-shadow:0 6px 20px rgba(0,229,255,0.10),0 0 18px rgba(255,0,208,0.06);transform:translateY(-2px)}
+.actions{display:flex;gap:10px}
+.save-like,#saveBtn{background:linear-gradient(90deg,var(--accent),#66fff0);color:#001018;padding:10px 16px;border-radius:12px;border:none;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,255,255,0.10),0 10px 36px rgba(0,229,255,0.12),0 0 30px rgba(102,255,240,0.08)}
+.danger{background:transparent;border:1px solid rgba(255,0,80,0.12);color:#ff708f;padding:10px 14px;border-radius:10px;cursor:pointer}
+
+/* Input placeholders */
+::placeholder{color:rgba(230,247,255,0.55)}
+
+@media(max-width:800px){.sidebar{width:40%}.editor-inner{padding:8px}}
+
+/* Neon Title */
+.neon-title{color:var(--text);font-weight:700;text-transform:none;letter-spacing:0.6px;position:relative;text-shadow:0 0 6px rgba(255,255,255,0.10),0 0 14px rgba(0,229,255,0.14),0 0 26px rgba(255,0,208,0.06)}
+.neon-title{filter:drop-shadow(0 0 12px rgba(0,229,255,0.18))}
+.neon-title::after{content:'';position:absolute;left:0;right:0;bottom:-6px;height:6px;background:linear-gradient(90deg,var(--accent),var(--accent2));opacity:0.16;border-radius:6px}
+
+@keyframes neon-flicker{
+  0%,100%{text-shadow:0 0 8px rgba(0,229,255,0.18),0 0 24px rgba(255,0,208,0.06)}
+  50%{text-shadow:0 0 14px rgba(0,229,255,0.28),0 0 36px rgba(255,0,208,0.12)}
+}
+.neon-title{animation:neon-flicker 3s ease-in-out infinite}
+
+/* Force all borders to white */
+:root{--force-border:#ffffff}
+.app, .app *{border-color:var(--force-border) !important; border-image: none !important}
+/* make sure specific bordered controls obey */
+.entries li.active{border-image:none !important; border-color:var(--force-border) !important}
+#newEntryBtn, #saveBtn, .danger, #clearAudioFile, input, textarea, select, button{border-color:var(--force-border) !important}

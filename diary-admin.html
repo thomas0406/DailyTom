@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Diary Admin - Edit Entries</title>
+  <style>
+    * { box-sizing: border-box; }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+    }
+
+    .admin-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2em;
+    }
+
+    header p {
+      margin: 10px 0 0 0;
+      opacity: 0.9;
+    }
+
+    .admin-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+
+    .section {
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .section h2 {
+      margin: 0 0 20px 0;
+      color: #667eea;
+      border-bottom: 2px solid #667eea;
+      padding-bottom: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: #333;
+      font-size: 0.9em;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="password"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-family: inherit;
+      font-size: 1em;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+    }
+
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 5px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-secondary {
+      background: #e0e0e0;
+      color: #333;
+    }
+
+    .btn-secondary:hover {
+      background: #d0d0d0;
+    }
+
+    .btn-danger {
+      background: #ff6b6b;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #ff5252;
+    }
+
+    .btn-secondary {
+      flex: 0;
+      padding: 10px 15px;
+    }
+
+    .entries-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .entry-item {
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .entry-item:hover {
+      background: #f0f0f0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .entry-item.active {
+      background: #e8eaf6;
+      border-left-color: #764ba2;
+    }
+
+    .entry-item-title {
+      font-weight: 600;
+      color: #333;
+      margin: 0 0 5px 0;
+    }
+
+    .entry-item-date {
+      font-size: 0.85em;
+      color: #999;
+      margin: 0;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+    }
+
+    .empty-state p {
+      margin: 0;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #ddd;
+    }
+
+    .tab-button {
+      padding: 10px 20px;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      font-weight: 600;
+      color: #999;
+      transition: all 0.2s ease;
+    }
+
+    .tab-button.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+    }
+
+    .alert {
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .alert.show {
+      display: block;
+    }
+
+    .alert-success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .alert-info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+
+    .alert-danger {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-card-number {
+      font-size: 2em;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .stat-card-label {
+      font-size: 0.85em;
+      opacity: 0.9;
+      margin: 5px 0 0 0;
+    }
+
+    @media(max-width:768px) {
+      .admin-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      header h1 {
+        font-size: 1.5em;
+      }
+    }
+
+    .version-info {
+      text-align: center;
+      margin-top: 40px;
+      padding: 20px;
+      color: #999;
+      border-top: 1px solid #eee;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <header>
+      <h1>📔 Diary Admin Panel</h1>
+      <p>Kelola entry diary Anda di sini. Entries disimpan di localStorage dan ditampilkan di diary-public.html</p>
+    </header>
+
+    <div class="alert alert-info" id="infoAlert"></div>
+    <div class="alert alert-success" id="successAlert"></div>
+    <div class="alert alert-danger" id="errorAlert"></div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <p class="stat-card-number" id="totalEntries">0</p>
+        <p class="stat-card-label">Total Entries</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-card-number" id="totalWords">0</p>
+        <p class="stat-card-label">Total Kata</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-card-number" id="lastUpdate">-</p>
+        <p class="stat-card-label">Update Terakhir</p>
+      </div>
+    </div>
+
+    <div class="admin-grid">
+      <!-- Section Editor -->
+      <div class="section">
+        <h2>✏️ Editor</h2>
+        
+        <div class="form-group">
+          <label>Judul</label>
+          <input type="text" id="inputTitle" placeholder="Masukkan judul entry...">
+        </div>
+
+        <div class="form-group">
+          <label>Tanggal</label>
+          <input type="date" id="inputDate">
+        </div>
+
+        <div class="form-group">
+          <label>Isi Cerita</label>
+          <textarea id="inputContent" placeholder="Tulis cerita Anda di sini..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>URL Audio (Opsional)</label>
+          <input type="text" id="inputAudioUrl" placeholder="https://...">
+        </div>
+
+        <div class="button-group">
+          <button class="btn-primary" onclick="saveEntry()">💾 Simpan Entry</button>
+          <button class="btn-secondary" onclick="clearForm()">🔄 Bersihkan</button>
+          <button class="btn-danger" onclick="deleteEntry()" id="deleteBtn" style="flex: 0; padding: 10px 15px;">🗑️ Hapus</button>
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 5px; font-size: 0.85em; color: #666;">
+          <strong>📌 Tips:</strong>
+          <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+            <li>Entry baru otomatis dibuat saat Anda klik "Simpan"</li>
+            <li>Data disimpan di localStorage browser (5-10MB)</li>
+            <li>Entries ditampilkan di diary-public.html</li>
+            <li>Audio URL harus accessible (public link)</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Section Daftar Entry -->
+      <div class="section">
+        <h2>📚 Daftar Entry</h2>
+        
+        <div id="entriesList" class="entries-list">
+          <div class="empty-state">
+            <p>📭 Belum ada entry. Buat entry baru di sebelah kiri!</p>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 5px; font-size: 0.85em;">
+          <button class="btn-primary" onclick="exportData()" style="width: 100%; margin-bottom: 10px;">📥 Export sebagai JSON</button>
+          <button class="btn-secondary" style="width: 100%; cursor: pointer;" onclick="document.getElementById('importFile').click()">📤 Import dari JSON</button>
+          <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData()">
+        </div>
+      </div>
+    </div>
+
+    <div class="version-info">
+      <p>Diary Admin v1.0 • Data disimpan di localStorage • Kunjungi <strong>diary-public.html</strong> untuk melihat diary yang dapat dibaca pengunjung</p>
+    </div>
+  </div>
+
+  <script>
+    const storageKey = 'diaryEntries_v1';
+    let entries = [];
+    let currentId = null;
+
+    // Load entries
+    function load() {
+      try {
+        entries = JSON.parse(localStorage.getItem(storageKey)) || [];
+        renderEntries();
+        updateStats();
+      } catch(e) {
+        showAlert('Error loading data: ' + e.message, 'error');
+      }
+    }
+
+    // Save entry
+    function saveEntry() {
+      const title = document.getElementById('inputTitle').value.trim();
+      const date = document.getElementById('inputDate').value;
+      const content = document.getElementById('inputContent').value.trim();
+      const audioUrl = document.getElementById('inputAudioUrl').value.trim();
+
+      if (!title) {
+        showAlert('Judul tidak boleh kosong!', 'error');
+        return;
+      }
+      if (!content) {
+        showAlert('Isi cerita tidak boleh kosong!', 'error');
+        return;
+      }
+      if (!date) {
+        showAlert('Tanggal harus dipilih!', 'error');
+        return;
+      }
+
+      if (currentId) {
+        // Update existing
+        const idx = entries.findIndex(e => e.id === currentId);
+        if (idx !== -1) {
+          entries[idx] = {
+            id: currentId,
+            title, date, content,
+            audioUrl: audioUrl || null,
+            lastUpdated: new Date().toISOString()
+          };
+          showAlert('Entry diperbarui! ✅', 'success');
+        }
+      } else {
+        // Create new
+        entries.push({
+          id: String(Date.now()),
+          title, date, content,
+          audioUrl: audioUrl || null,
+          createdAt: new Date().toISOString()
+        });
+        showAlert('Entry baru dibuat! ✨', 'success');
+      }
+
+      localStorage.setItem(storageKey, JSON.stringify(entries));
+      clearForm();
+      renderEntries();
+      updateStats();
+    }
+
+    // Delete entry
+    function deleteEntry() {
+      if (!currentId) {
+        showAlert('Pilih entry untuk dihapus', 'error');
+        return;
+      }
+      if (!confirm('Yakin hapus entry ini?')) return;
+
+      entries = entries.filter(e => e.id !== currentId);
+      localStorage.setItem(storageKey, JSON.stringify(entries));
+      clearForm();
+      renderEntries();
+      updateStats();
+      showAlert('Entry dihapus! 🗑️', 'success');
+    }
+
+    // Clear form
+    function clearForm() {
+      document.getElementById('inputTitle').value = '';
+      document.getElementById('inputDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('inputContent').value = '';
+      document.getElementById('inputAudioUrl').value = '';
+      currentId = null;
+      renderEntries();
+    }
+
+    // Render entries list
+    function renderEntries() {
+      const container = document.getElementById('entriesList');
+      const sorted = [...entries].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      if (sorted.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>📭 Belum ada entry</p></div>';
+        document.getElementById('deleteBtn').disabled = true;
+        return;
+      }
+
+      container.innerHTML = sorted.map(entry => `
+        <div class="entry-item ${entry.id === currentId ? 'active' : ''}" onclick="selectEntry('${entry.id}')">
+          <p class="entry-item-title">${entry.title}</p>
+          <p class="entry-item-date">${entry.date}</p>
+        </div>
+      `).join('');
+
+      document.getElementById('deleteBtn').disabled = false;
+    }
+
+    // Select entry
+    function selectEntry(id) {
+      const entry = entries.find(e => e.id === id);
+      if (!entry) return;
+
+      currentId = id;
+      document.getElementById('inputTitle').value = entry.title;
+      document.getElementById('inputDate').value = entry.date;
+      document.getElementById('inputContent').value = entry.content;
+      document.getElementById('inputAudioUrl').value = entry.audioUrl || '';
+      
+      renderEntries();
+    }
+
+    // Show alert
+    function showAlert(message, type = 'info') {
+      const alertEl = document.getElementById(type + 'Alert');
+      alertEl.textContent = message;
+      alertEl.classList.add('show');
+      setTimeout(() => alertEl.classList.remove('show'), 4000);
+    }
+
+    // Update stats
+    function updateStats() {
+      document.getElementById('totalEntries').textContent = entries.length;
+      
+      const totalWords = entries.reduce((sum, e) => 
+        sum + e.content.split(/\s+/).filter(w => w).length, 0);
+      document.getElementById('totalWords').textContent = totalWords;
+
+      if (entries.length > 0) {
+        const latest = entries.reduce((max, e) => 
+          new Date(e.date) > new Date(max.date) ? e : max);
+        const date = new Date(latest.date).toLocaleDateString('id-ID');
+        document.getElementById('lastUpdate').textContent = date;
+      }
+    }
+
+    // Export data
+    function exportData() {
+      const data = JSON.stringify(entries, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `diary-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showAlert('Data diexport! 📥', 'success');
+    }
+
+    // Import data
+    function importData() {
+      const file = document.getElementById('importFile').files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (!Array.isArray(imported)) throw new Error('Format tidak valid');
+          entries = imported;
+          localStorage.setItem(storageKey, JSON.stringify(entries));
+          clearForm();
+          renderEntries();
+          updateStats();
+          showAlert('Data diimport berhasil! 📤', 'success');
+        } catch(err) {
+          showAlert('Error import: ' + err.message, 'error');
+        }
+      };
+      reader.readAsText(file);
+      document.getElementById('importFile').value = '';
+    }
+
+    // Set today's date as default
+    document.getElementById('inputDate').valueAsDate = new Date();
+
+    // Load on start
+    load();
+
+    // Show info
+    showAlert('💡 Tip: Entries disimpan otomatis di localStorage. Kunjungi diary-public.html untuk preview public!', 'info');
+  </script>
+</body>
+</html>

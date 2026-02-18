@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Diary Web</title>
+  <style>
+    :root{
+      --bg-1:#04040b;
+      --bg-2:#00122a;
+      --panel:rgba(255,255,255,0.03);
+      --accent:#00e5ff;
+      --accent2:#ff00d0;
+      --text:#e6f7ff;
+      --muted:#8fa3b3;
+      --force-border:#ffffff;
+    }
+
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,var(--bg-1),var(--bg-2));color:var(--text);height:100vh;background-attachment:fixed}
+    .app{display:flex;height:100vh;position:relative;z-index:1}
+
+    #bgCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+    .sidebar{width:300px;border-right:1px solid rgba(0,229,255,0.06);background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:18px;display:flex;flex-direction:column;backdrop-filter:blur(6px)}
+    .sidebar header{display:flex;gap:12px;align-items:center}
+    .sidebar h1{font-size:20px;margin:0;flex:1;letter-spacing:0.6px}
+    #newEntryBtn{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#001018;border:none;padding:8px 12px;border-radius:10px;cursor:pointer;box-shadow:0 6px 18px rgba(0,229,255,0.06),0 0 18px rgba(255,0,208,0.06);transition:transform .12s ease}
+    #newEntryBtn:hover{transform:translateY(-2px);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.12),0 10px 30px rgba(0,229,255,0.14),0 0 36px rgba(255,0,208,0.12)}
+    .entries{list-style:none;padding:8px 0;margin:14px 0;overflow:auto;flex:1}
+    .entries li{padding:12px;border-radius:10px;margin-bottom:10px;background:linear-gradient(90deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));cursor:pointer;border:1px solid rgba(255,255,255,0.02);transition:box-shadow .15s,transform .12s}
+    .entries li:hover{transform:translateY(-4px);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.06),0 10px 30px rgba(0,229,255,0.08),0 0 20px rgba(255,0,208,0.04)}
+    .entries li.active{border-image:none !important;border-color:var(--force-border) !important;box-shadow:0 0 0 1px rgba(255,255,255,0.16),0 10px 36px rgba(0,229,255,0.16),0 0 40px rgba(255,0,208,0.12)}
+    .editor{flex:1;padding:28px;overflow:auto}
+    .editor-inner{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+    input[type="text"],input[type="date"],textarea,input{padding:12px;border:1px solid rgba(255,255,255,0.04);border-radius:12px;font-size:15px;background:rgba(0,0,0,0.18);color:var(--text);outline:none;box-shadow:inset 0 1px 0 rgba(255,255,255,0.02);border-color:var(--force-border) !important}
+
+    #entryTitle{width:100%;font-size:18px;padding:14px;border-radius:12px;font-weight:600;letter-spacing:0.2px}
+    textarea{min-height:300px;resize:vertical}
+    .audio-controls .file-row{display:flex;gap:8px;align-items:center}
+    #clearAudioFile{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text);cursor:pointer;border-color:var(--force-border) !important}
+    .audio-controls{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+    .audio-controls .label{margin-bottom:4px;color:var(--muted);font-size:13px}
+    .audio-controls #audioUrl{width:100%;min-width:0;padding:10px;border-radius:8px}
+    .audio-controls .file-row{gap:10px;align-items:center;width:100%}
+    .audio-controls .file-row input[type="file"]{flex:1}
+    #audioPlayer{width:100%;max-width:100%;margin-top:6px;border-radius:8px;outline:none}
+    .audio-player-row{display:flex;gap:10px;align-items:center}
+    .audio-player-row #audioPlayer{flex:1;width:auto;margin-top:0}
+    .icon-btn{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:8px;border:1px solid var(--force-border);background:transparent;color:var(--text);cursor:pointer;border-color:var(--force-border) !important}
+    .icon-btn svg{display:block;opacity:0.95}
+    .icon-btn:hover{box-shadow:0 6px 20px rgba(0,229,255,0.10),0 0 18px rgba(255,0,208,0.06);transform:translateY(-2px)}
+    .actions{display:flex;gap:10px}
+    #saveBtn{background:linear-gradient(90deg,var(--accent),#66fff0);color:#001018;padding:10px 16px;border-radius:12px;border:none;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,255,255,0.10),0 10px 36px rgba(0,229,255,0.12),0 0 30px rgba(102,255,240,0.08)}
+    #saveBtn:hover{transform:translateY(-2px);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.20),0 10px 46px rgba(0,229,255,0.22),0 0 40px rgba(102,255,240,0.18)}
+    .danger{background:transparent;border:1px solid rgba(255,0,80,0.12);color:#ff708f;padding:10px 14px;border-radius:10px;cursor:pointer;border-color:var(--force-border) !important}
+    .danger:hover{background:rgba(255,0,80,0.08)}
+    ::placeholder{color:rgba(230,247,255,0.55)}
+    .neon-title{color:var(--text);font-weight:700;text-transform:none;letter-spacing:0.6px;position:relative;text-shadow:0 0 6px rgba(255,255,255,0.10),0 0 14px rgba(0,229,255,0.14),0 0 26px rgba(255,0,208,0.06)}
+    .neon-title{filter:drop-shadow(0 0 12px rgba(0,229,255,0.18))}
+    .neon-title::after{content:'';position:absolute;left:0;right:0;bottom:-6px;height:6px;background:linear-gradient(90deg,var(--accent),var(--accent2));opacity:0.16;border-radius:6px}
+    @keyframes neon-flicker{
+      0%,100%{text-shadow:0 0 8px rgba(0,229,255,0.18),0 0 24px rgba(255,0,208,0.06)}
+      50%{text-shadow:0 0 14px rgba(0,229,255,0.28),0 0 36px rgba(255,0,208,0.12)}
+    }
+    .neon-title{animation:neon-flicker 3s ease-in-out infinite}
+    
+    /* Toggle Sidebar Button */
+    .toggle-sidebar{
+      display:none;
+      background:transparent;
+      border:1px solid var(--force-border);
+      color:var(--text);
+      width:40px;
+      height:40px;
+      padding:0;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:20px;
+    }
+    .toggle-sidebar:hover{
+      box-shadow:0 6px 20px rgba(0,229,255,0.10),0 0 18px rgba(255,0,208,0.06);
+    }
+    
+    /* Mobile Responsive Design */
+    @media(max-width:1024px){
+      .sidebar{width:250px}
+      .editor-inner{max-width:100%}
+    }
+    
+    @media(max-width:768px){
+      .sidebar{width:35%;padding:12px}
+      .editor{padding:16px}
+      .sidebar h1{font-size:16px}
+      #newEntryBtn{padding:6px 10px;font-size:13px}
+      .editor-inner{gap:10px}
+      input[type="text"],input[type="date"],textarea,input{padding:10px;font-size:14px}
+      #entryTitle{font-size:16px}
+      textarea{min-height:250px}
+      #saveBtn,#deleteBtn{padding:8px 12px;font-size:13px}
+      .actions{flex-wrap:wrap}
+    }
+    
+    @media(max-width:600px){
+      .app{flex-direction:column;height:auto;min-height:100vh}
+      .sidebar{width:100%;border-right:none;border-bottom:1px solid rgba(0,229,255,0.06);flex-direction:row;align-items:center;justify-content:space-between;padding:12px;max-height:auto;position:relative}
+      .sidebar.hidden{display:none}
+      .toggle-sidebar{display:inline-flex;align-items:center;justify-content:center}
+      .sidebar header{flex-direction:row;gap:8px;width:auto;align-items:center;flex:1}
+      .sidebar h1{font-size:14px;margin:0;flex:1}
+      #newEntryBtn{width:auto;padding:6px 10px;font-size:12px;white-space:nowrap}
+      .entries{margin:8px 0;max-height:120px;overflow-y:auto;display:none}
+      .sidebar.visible .entries{display:block;width:100%;margin-top:12px}
+      .editor{padding:12px;overflow:auto}
+      .editor-inner{gap:8px}
+      input[type="text"],input[type="date"],textarea,input{padding:8px;font-size:13px;border-radius:8px}
+      #entryTitle{font-size:15px;padding:10px}
+      textarea{min-height:200px;resize:none}
+      .audio-controls{gap:8px}
+      .audio-controls .label{font-size:12px}
+      #audioPlayer{max-width:100%;margin-top:4px}
+      .audio-controls .file-row{flex-wrap:wrap}
+      .icon-btn{width:36px;height:36px;min-width:36px}
+      .actions{gap:8px;flex-wrap:wrap}
+      #saveBtn,#deleteBtn{flex:1;min-width:100px;padding:8px;font-size:12px}
+      .neon-title::after{bottom:-4px;height:4px}
+    }
+    
+    @media(max-width:480px){
+      body{font-size:13px}
+      .sidebar{padding:10px;gap:10px}
+      .sidebar header{gap:6px}
+      .sidebar h1{font-size:12px}
+      #newEntryBtn{padding:5px 8px;font-size:11px}
+      .entries li{padding:6px;margin-bottom:4px;font-size:11px}
+      .editor{padding:10px}
+      .editor-inner{gap:6px}
+      input[type="text"],input[type="date"],textarea,input{padding:8px;font-size:12px}
+      #entryTitle{font-size:14px}
+      textarea{min-height:180px}
+      .audio-controls .label{font-size:11px}
+      #saveBtn,#deleteBtn{font-size:11px;padding:6px}
+      .icon-btn{width:32px;height:32px;min-width:32px}
+    }
+    
+    /* Touch-friendly adjustments */
+    @media(hover:none) and (pointer:coarse){
+      button{min-height:44px}
+      input,textarea{min-height:44px;padding:12px}
+      .entries li{min-height:44px;display:flex;align-items:center}
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bgCanvas"></canvas>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <header>
+        <h1 class="neon-title">HAI KAMU ADALAH ORANG BERUNTUNG YANG DIPERCAYAI THOMASS HAVE FUNN :)</h1>
+        <button id="newEntryBtn">+ Halaman Baru</button>
+        <button id="toggleSidebarBtn" class="toggle-sidebar" title="Menu">☰</button>
+      </header>
+      <ul id="entriesList" class="entries"></ul>
+    </aside>
+
+    <main class="editor">
+      <div class="editor-inner">
+        <input id="entryTitle" placeholder="Judul..." />
+        <input id="entryDate" type="date" />
+        <textarea id="entryContent" placeholder="Tulis ceritamu di sini..."></textarea>
+
+        <div class="audio-controls">
+          <label class="label">Audio per-halaman (URL atau upload):</label>
+          <input id="audioUrl" placeholder="Masukkan URL audio (opsional)" />
+          <div class="file-row">
+            <button id="audioUploadBtn" class="icon-btn" title="Pilih file">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 7l4-4 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 21H3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <input id="audioFile" type="file" accept="audio/*" />
+            <button id="clearAudioFile">Hapus file</button>
+          </div>
+          <div class="audio-player-row">
+            <button id="audioToggleBtn" class="icon-btn" title="Play/Pause">
+              <svg id="audioToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 3v18l15-9L5 3z" fill="currentColor"/></svg>
+            </button>
+            <audio id="audioPlayer" controls></audio>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="saveBtn">Simpan</button>
+          <button id="deleteBtn" class="danger">Hapus Halaman</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // ===== DIARY APP SCRIPT =====
+    const qs = s => document.querySelector(s)
+    const qsa = s => Array.from(document.querySelectorAll(s))
+
+    const entriesKey = 'diaryEntries_v1'
+    let entries = []
+    let currentId = null
+    let useLocalStorage = true
+
+    // Test localStorage availability
+    try {
+      localStorage.setItem('test', 'test')
+      localStorage.removeItem('test')
+    } catch(e) {
+      console.warn('⚠️ localStorage tidak tersedia, menggunakan in-memory storage')
+      useLocalStorage = false
+    }
+
+    // Elements
+    const entriesList = qs('#entriesList')
+    const newEntryBtn = qs('#newEntryBtn')
+    const entryTitle = qs('#entryTitle')
+    const entryDate = qs('#entryDate')
+    const entryContent = qs('#entryContent')
+    const audioUrl = qs('#audioUrl')
+    const audioFile = qs('#audioFile')
+    const audioPlayer = qs('#audioPlayer')
+    const clearAudioFile = qs('#clearAudioFile')
+    const audioUploadBtn = qs('#audioUploadBtn')
+    const audioToggleBtn = qs('#audioToggleBtn')
+    const saveBtn = qs('#saveBtn')
+    const deleteBtn = qs('#deleteBtn')
+    const sidebar = qs('#sidebar')
+    const toggleSidebarBtn = qs('#toggleSidebarBtn')
+
+    function load(){
+      try {
+        if(useLocalStorage) {
+          entries = JSON.parse(localStorage.getItem(entriesKey)) || []
+        }
+      } catch(e) {
+        console.error('❌ Error loading:', e)
+        entries = []
+      }
+      renderList()
+      if(entries.length) openEntry(entries[0].id)
+    }
+
+    function saveToStorage(){
+      try {
+        if(useLocalStorage) {
+          localStorage.setItem(entriesKey, JSON.stringify(entries))
+          console.log('💾 Tersimpan ke localStorage')
+        } else {
+          console.log('💾 Tersimpan ke memory')
+        }
+      } catch(e) {
+        console.error('❌ Error saving:', e)
+      }
+    }
+
+    function renderList(){
+      entriesList.innerHTML = ''
+      entries.slice().reverse().forEach(e => {
+        const li = document.createElement('li')
+        li.textContent = `${e.date || ''} — ${e.title || '(Tanpa judul)'}`
+        li.dataset.id = e.id
+        if(e.id===currentId) li.classList.add('active')
+        li.addEventListener('click', ()=>openEntry(e.id))
+        entriesList.appendChild(li)
+      })
+    }
+
+    function openEntry(id){
+      const e = entries.find(x=>x.id===id)
+      if(!e) return
+      currentId = e.id
+      entryTitle.value = e.title
+      entryDate.value = e.date || ''
+      entryContent.value = e.content || ''
+      if(e.audio){ audioPlayer.src = e.audio; audioPlayer.style.display='block' } else { audioPlayer.src=''; audioPlayer.style.display='none' }
+      audioUrl.value = e.audioUrl || ''
+      renderList()
+    }
+
+    function newEntry(){
+      const id = String(Date.now())
+      const date = new Date().toISOString().slice(0,10)
+      const e = {id,title:'',date,content:'',audio:null,audioUrl:''}
+      entries.push(e)
+      saveToStorage()
+      openEntry(id)
+      console.log('✨ Halaman baru dibuat:', id)
+    }
+
+    function saveEntry(){
+      if(!currentId) return alert('Pilih atau buat halaman terlebih dahulu')
+      const idx = entries.findIndex(x=>x.id===currentId)
+      if(idx===-1) return
+      entries[idx].title = entryTitle.value
+      entries[idx].date = entryDate.value
+      entries[idx].content = entryContent.value
+      entries[idx].audioUrl = audioUrl.value
+      entries[idx].audio = audioPlayer.src || null
+      saveToStorage()
+      renderList()
+      alert('✅ Tersimpan!')
+    }
+
+    function deleteEntry(){
+      if(!currentId) return
+      if(!confirm('Hapus halaman ini?')) return
+      entries = entries.filter(x=>x.id!==currentId)
+      saveToStorage()
+      currentId = entries.length? entries[0].id : null
+      if(currentId) openEntry(currentId); else { entryTitle.value='';entryDate.value='';entryContent.value='';audioPlayer.src='';audioPlayer.style.display='none';audioUrl.value=''; }
+      renderList()
+      console.log('🗑️  Halaman dihapus')
+    }
+
+    // Audio file handling
+    audioFile.addEventListener('change', ()=>{
+      const f = audioFile.files[0]
+      if(!f) return
+      const reader = new FileReader()
+      reader.onload = ()=>{
+        audioPlayer.src = reader.result
+        audioPlayer.style.display = 'block'
+        console.log('🎵 Audio file loaded')
+      }
+      reader.readAsDataURL(f)
+    })
+
+    clearAudioFile.addEventListener('click', ()=>{
+      audioFile.value = ''
+      audioPlayer.src = ''
+      audioPlayer.style.display='none'
+      audioUrl.value = ''
+      console.log('🔇 Audio cleared')
+    })
+
+    audioUrl.addEventListener('change', ()=>{
+      const v = audioUrl.value.trim()
+      if(!v){ audioPlayer.src=''; audioPlayer.style.display='none'; return }
+      audioPlayer.src = v
+      audioPlayer.style.display = 'block'
+      console.log('🔗 Audio URL set:', v)
+    })
+
+    if(audioUploadBtn){
+      audioUploadBtn.addEventListener('click', ()=>{ if(audioFile) audioFile.click() })
+    }
+
+    // Play/pause toggle
+    if(audioToggleBtn && audioPlayer){
+      const icon = document.getElementById('audioToggleIcon')
+      function setPlay(){ if(!icon) return; icon.innerHTML = '<path d="M5 3v18l15-9L5 3z" fill="currentColor"/>' }
+      function setPause(){ if(!icon) return; icon.innerHTML = '<path d="M6 5h4v14H6zM14 5h4v14h-4z" fill="currentColor"/>' }
+      audioToggleBtn.addEventListener('click', ()=>{
+        if(audioPlayer.paused) audioPlayer.play().catch(()=>{})
+        else audioPlayer.pause()
+      })
+      audioPlayer.addEventListener('play', setPause)
+      audioPlayer.addEventListener('pause', setPlay)
+      if(audioPlayer.paused) setPlay(); else setPause()
+    }
+
+    // Event listeners for buttons
+    newEntryBtn.addEventListener('click', newEntry)
+    saveBtn.addEventListener('click', saveEntry)
+    deleteBtn.addEventListener('click', deleteEntry)
+
+    // Mobile sidebar toggle
+    if(toggleSidebarBtn){
+      toggleSidebarBtn.addEventListener('click', ()=>{
+        sidebar.classList.toggle('visible')
+      })
+    }
+
+    // Close sidebar when entry is clicked on mobile
+    entriesList.addEventListener('click', (e)=>{
+      if(window.innerWidth <= 600){
+        sidebar.classList.remove('visible')
+      }
+    })
+
+    console.log('✅ Aplikasi diary siap! (Mobile-optimized)')
+
+    // Initialize app
+    load()
+
+    // ===== NEON BACKGROUND PARTICLES =====
+    (function(){
+      const canvas = document.getElementById('bgCanvas')
+      if(!canvas) return
+      const ctx = canvas.getContext('2d')
+      let W = 0, H = 0
+      function resize(){ W = canvas.width = innerWidth; H = canvas.height = innerHeight }
+      window.addEventListener('resize', resize)
+      resize()
+
+      const colors = ['#00e5ff','#ff00d0','#66fff0','#ff7ae8']
+      const parts = []
+      const COUNT = Math.max(Math.min(Math.floor((W*H)/30000), 140), 40)
+
+      class P{
+        constructor(){ this.reset(true) }
+        reset(init){
+          this.x = Math.random()*W
+          this.y = Math.random()*H
+          const dir = Math.random()*Math.PI*2
+          const speed = 0.2 + Math.random()*0.6
+          this.vx = Math.cos(dir)*speed
+          this.vy = Math.sin(dir)*speed
+          this.r = 2 + Math.random()*8
+          this.c = colors[Math.floor(Math.random()*colors.length)]
+          if(!init){
+            if(Math.random()<0.3){ this.x = Math.random()<0.5? -50: W+50 }
+            if(Math.random()<0.3){ this.y = Math.random()<0.5? -50: H+50 }
+          }
+        }
+        update(){
+          this.x += this.vx
+          this.y += this.vy
+          if(this.x < -80 || this.x > W+80 || this.y < -80 || this.y > H+80) this.reset(false)
+        }
+        draw(){
+          const grad = ctx.createRadialGradient(this.x,this.y,0,this.x,this.y,this.r*8)
+          grad.addColorStop(0, this.c)
+          grad.addColorStop(0.18, this.c + '66')
+          grad.addColorStop(1, 'rgba(0,0,0,0)')
+          ctx.fillStyle = grad
+          ctx.fillRect(this.x - this.r*8, this.y - this.r*8, this.r*16, this.r*16)
+        }
+      }
+
+      function initParticles(){
+        parts.length = 0
+        const total = Math.max(40, Math.min(120, Math.floor((W*H)/40000)))
+        for(let i=0;i<total;i++) parts.push(new P())
+      }
+
+      initParticles()
+
+      let mx = -9999, my = -9999
+      window.addEventListener('mousemove', (e)=>{ mx = e.clientX; my = e.clientY })
+
+      function frame(){
+        ctx.clearRect(0,0,W,H)
+        ctx.globalCompositeOperation = 'lighter'
+        for(const p of parts){
+          if(mx > -1000){
+            const dx = (mx - p.x) * 0.0004
+            const dy = (my - p.y) * 0.0004
+            p.vx += dx
+            p.vy += dy
+          }
+          p.vx *= 0.995; p.vy *= 0.995
+          p.update()
+          p.draw()
+        }
+        ctx.globalCompositeOperation = 'source-over'
+        requestAnimationFrame(frame)
+      }
+      frame()
+      let reInitTimer
+      window.addEventListener('resize', ()=>{ clearTimeout(reInitTimer); reInitTimer = setTimeout(()=>{ initParticles() }, 250) })
+    })()
+  </script>
+</body>
+</html>

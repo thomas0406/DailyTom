@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Diary Web</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    /* Fallback inline styles jika CSS tidak load */
+    :root{
+      --bg-1:#04040b;
+      --bg-2:#00122a;
+      --accent:#00e5ff;
+      --accent2:#ff00d0;
+      --text:#e6f7ff;
+      --muted:#8fa3b3;
+      --force-border:#ffffff;
+    }
+    body{margin:0;padding:0;font-family:Arial,sans-serif;background:#04040b;color:#e6f7ff}
+    .app{display:flex;min-height:100vh}
+    .sidebar{flex:0 0 300px;padding:20px;border-right:1px solid #00e5ff}
+    .editor{flex:1;padding:20px;overflow:auto}
+    input,textarea,button{padding:10px;margin:5px 0;width:100%;border:1px solid #00e5ff;border-radius:5px;background:rgba(0,0,0,0.5);color:#e6f7ff;font-family:Arial,sans-serif}
+    button{cursor:pointer;background:#00e5ff;color:#000;border:none;padding:10px 20px;border-radius:5px}
+    button:hover{background:#66fff0}
+    .entries{list-style:none;padding:0;margin:10px 0}
+    .entries li{padding:10px;margin:5px 0;background:rgba(255,255,255,0.1);border-radius:5px;cursor:pointer}
+    .entries li.active{background:#00e5ff;color:#000}
+    .actions{margin-top:20px;display:flex;gap:10px}
+    
+    /* Toggle button */
+    .toggle-sidebar{display:none;width:44px;height:44px;padding:0;background:transparent;border:1px solid #00e5ff;color:#e6f7ff;cursor:pointer;border-radius:5px;font-size:18px}
+    
+    /* Mobile responsive */
+    @media(max-width:768px){
+      .sidebar{flex:0 0 35%;padding:12px}
+      input,textarea,button{font-size:14px;padding:8px}
+      .entries li{font-size:12px;padding:8px}
+    }
+    
+    @media(max-width:600px){
+      .app{flex-direction:column}
+      .sidebar{flex:none;width:100%;border-right:none;border-bottom:1px solid #00e5ff;display:flex;align-items:center;gap:10px;padding:10px}
+      .sidebar.hidden{display:none}
+      .toggle-sidebar{display:block}
+      .entries{display:none;width:100%;margin:10px 0}
+      .sidebar.visible .entries{display:block}
+      .editor{padding:12px}
+      input,textarea{font-size:13px;min-height:44px}
+      textarea{min-height:200px;resize:none}
+      button{min-height:44px}
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bgCanvas"></canvas>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <header>
+        <h1 class="neon-title">HAI KAMU ADALAH ORANG BERUNTUNG YANG DIPERCAYAI THOMASS HAVE FUNN :)</h1>
+        <button id="newEntryBtn">+ Halaman Baru</button>
+        <button id="toggleSidebarBtn" class="toggle-sidebar" title="Menu">☰</button>
+      </header>
+      <ul id="entriesList" class="entries"></ul>
+    </aside>
+
+    <main class="editor">
+      <div class="editor-inner">
+        <input id="entryTitle" placeholder="Judul..." />
+        <input id="entryDate" type="date" />
+        <textarea id="entryContent" placeholder="Tulis ceritamu di sini..."></textarea>
+
+        <div class="audio-controls">
+          <label class="label">Audio per-halaman (URL atau upload):</label>
+          <input id="audioUrl" placeholder="Masukkan URL audio (opsional)" />
+          <div class="file-row">
+            <button id="audioUploadBtn" class="icon-btn" title="Pilih file">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 7l4-4 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 21H3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <input id="audioFile" type="file" accept="audio/*" />
+            <button id="clearAudioFile">Hapus file</button>
+          </div>
+          <div class="audio-player-row">
+            <button id="audioToggleBtn" class="icon-btn" title="Play/Pause">
+              <svg id="audioToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 3v18l15-9L5 3z" fill="currentColor"/></svg>
+            </button>
+            <audio id="audioPlayer" controls></audio>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="saveBtn">Simpan</button>
+          <button id="deleteBtn" class="danger">Hapus Halaman</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    // Mobile sidebar toggle
+    const sidebar = document.getElementById('sidebar')
+    const toggleSidebarBtn = document.getElementById('toggleSidebarBtn')
+    if(toggleSidebarBtn){
+      toggleSidebarBtn.addEventListener('click', ()=>{
+        sidebar.classList.toggle('visible')
+      })
+    }
+    document.getElementById('entriesList').addEventListener('click', ()=>{
+      if(window.innerWidth <= 600){
+        sidebar.classList.remove('visible')
+      }
+    })
+    
+    // Debug & verify app loaded
+    console.log('✅ Aplikasi diary sudah siap! (Mobile-optimized)')
+    console.log('📊 Total entries:', entries?.length || 0)
+    console.log('💾 Storage type:', useLocalStorage ? 'localStorage' : 'memory')
+  </script>
+</body>
+</html>
